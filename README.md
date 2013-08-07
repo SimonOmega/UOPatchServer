@@ -13,6 +13,7 @@ Introduction
 ### THIS IS A QUICK HACK.  
 That being said this code is proof of concept and will be growing as there is time to work on it.  This was built as an example of a possible server solution and not just a wrapper to the UOPatch.exe application (localy).
 
+
 Quickstart Guide
 ----------------
 It is rather featureless atm to use it do the following:
@@ -29,6 +30,16 @@ It is rather featureless atm to use it do the following:
 
 The patcher will attach to the Python script and begin to transfer the patch files. `UOPatch.exe` will apply the patches and complete it's operations.
 
+
+Tests
+----------------
+Python Version: 3.2.2
+Windows Version: Windows 8 Pro (64bit)
+Linux Version: CrunchBang 11 Waldorf (64bit)
+UO Client: 7.0.10.3
+UO Patches: 7.0.11, 7.0.12
+
+
 Problems
 ----------------
 At this time `UOPatchServer.py` does not do any real verification on the clients current version, and the patches it has available.  What ever is in the `archive` folder will be applied.
@@ -43,6 +54,7 @@ Script will error when client disconnects. I'll handle the error once I get time
 
 Downloads seem slow because the files are sent 1KB at a time.  I'll look at expanding that later.
 
+
 Credits
 ------------
 This could not be possible without help from the good people at RunUO.
@@ -55,3 +67,7 @@ The Following People put forth a great effort in this:
 * [seanandre](http://www.runuo.com/community/members/seanandre.40964/)
 * [Simon Omega](http://www.runuo.com/community/members/simon-omega.160203/)
 
+Change Log
+------------
+Jul - 07 - 2013 - Initial Release.
+Aug - 07 - 2013 - Code Clean Up.

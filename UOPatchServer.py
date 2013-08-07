@@ -9,118 +9,151 @@ from threading import Thread
 from socket import socket, AF_INET, SOCK_STREAM
 from struct import pack, unpack 
 
-_FILE_LIST = []
-_PATCH_DIR = path.join('.', 'archive')
-print("Using Patch Directory: ", _PATCH_DIR)
-for working_file in listdir(_PATCH_DIR):
-  if working_file.endswith(".rtp"):
-    _FILE_LIST.append(working_file)
-  if working_file.endswith(".pat"):
-    _FILE_LIST.append(working_file)
-print("Using File List: %s" % _FILE_LIST)
+class PatchHandler:
+  '''
+  This is a move to a class based structure to support the UO patch server.
+  I'm not a huge fan of classes, but it will help development forward.
+  '''
 
-_HOST = '127.0.0.1'
-_PORT = 8888
-_RUNNING = True
-_CLIENTS = {}
+  def __init__(self, conn, add, path):
+    self.listen = True
+    self.buffer_len = 4
+    self.connection = conn
+    self.address = add
+    self.working_directory = path
+    self.file_list = []
+    print("PatchHandler for %s is using directory %s", (self.address, self.working_directory))
+    for a_file in listdir(_PATCH_DIR):
+      if a_file.endswith(".rtp"):
+        self.file_list.append(a_file)
+      elif a_file.endswith(".pat"):
+        self.file_list.append(a_file)
+    print("PatchHandler for %s is using file list %s" % (self.address, self.file_list))
 
-def PatchListener(connection, host):
-  _LISTEN = True
-  _RECIEVED_COMMAND = False
-  while _LISTEN:
-    data = connection.recv(4)
-    if data == b'\x00\x00\x00\x15':
-      print("%s Sent: Client Hello/Request: %s" % (host, data))
-      Thread(target = SendCommands, args = (2, connection)).start()
-    elif data == b'\x00\x00\x00\x01':
+
+  def commands(self, command, target_file = None):
+    if command == 0:
+      # TODO: Impliment Patch Server Transfer
+      # BYTE 0x01
+      # BYTE[7] (all bytes 0x00)
+      # BYTE[4] IP Address
+      # BYTE[4] Port
+      print("Patch Server does not support PatchServerTrasfer at this time.")
+    if command == 1:
+      # TODO: Impliment Notifications
+      # BYTE 0x01
+      # BYTE[3] (all bytes 0x00)
+      # BYTE 0x01
+      # BYTE[3] (all bytes 0x00)
+      # BYTE 0x02
+      # BYTE[3] (all bytes 0x00)
+      # BYTE[4] Text Length
+      # BYTE[textlength] Notice Data (NULL Terminated)
+      print("Patch Server does not support Notifications at this time.")
+    if command == 2:
+      print("Server Sending: Protocol, Command, and UseSelf")
+      for i in range(0,3):
+        self.connection.send(b'\x00\x00\x00\x01')
+    if command == 3:
+      for a_file in self.file_list:
+        file_listing = {'working_filename':a_file.encode('ascii'),
+                     'namelen':pack('>i', len(a_file.encode('ascii'))),
+                     'working_filelen':pack('>i', path.getsize(path.join(self.working_directory, a_file)))}
+        print("<< Sever sent %s PatchListData entry %s" % (self.address, file_listing))
+        self.connection.send(file_listing['namelen'])
+        self.connection.send(file_listing['working_filename'])
+        self.connection.send(file_listing['working_filelen'])
+        self.connection.send(b'\x00\x00\x00\x00')
+    if command == 4:
+      if file == None:
+        print("Trying to send PatchData to Client, but no target_file name was sent to command 4.")
+      else:
+        file_properties = {'working_filename':target_file,
+                           'namelen':pack('>i', len(target_file.encode('ascii'))),
+                           'working_filelen':path.getsize(path.join(self.working_directory, target_file))}
+        print("<< Sever sending %s PatchData for %s" % (self.address, file_properties))
+        self.connection.send(file_properties['namelen'])
+        self.connection.send(file_properties['working_filename'].encode('ascii'))
+        self.connection.send(pack('>i', file_properties['working_filelen']))
+        with open(path.join(self.working_directory, file_properties['working_filename']), 'rb') as push_file:
+          block = push_file.read(1024)
+          while block:
+            self.connection.send(pack('>i', len(block)))
+            self.connection.send(block)
+            block = push_file.read(1024)
+        print(r"<< Sever done sending %s PatchData for %s sending \x00\x00\x00\x00 Block Size" % (self.address, file_properties))
+        self.connection.send(pack('>i', 0))
+    if command == 5:
+      self.connection.send(b'\x00\x00\x00\x00')
+      # TODO: Handle Error when Client Disconnects.
+
+
+  def requesthandler(self):
+    self.data = self.connection.recv(self.buffer_len)
+    if self.data == b'\x00\x00\x00\x15':
+      print(">> %s sent Client Hello/Request (%s)" % (self.address, self.data))
+      Thread(target = self.commands, args = (2, )).start()
+    elif self.data == b'\x00\x00\x00\x01':
       version_info = {'namelen':0, 'addon':"", 'version':0}
-      data = connection.recv(4)
-      version_info['namelen'] = unpack('>L', data)[0]
+      self.data = self.connection.recv(4)
+      version_info['namelen'] = unpack('>L', self.data)[0]
       # Length of addon Name
-      data = connection.recv(version_info['namelen'])
-      version_info['addon'] = data.decode('ascii')
+      self.data = self.connection.recv(version_info['namelen'])
+      version_info['addon'] = self.data.decode('ascii')
       # Name of the addon Running
-      data = connection.recv(4)
-      version_info['version'] = unpack('>L', data)[0]
+      self.data = self.connection.recv(4)
+      version_info['version'] = unpack('>L', self.data)[0]
       # Version Number (Patch Number) in this addon
-      print("%s Sent: Version: %s" % (host, version_info))
-      Thread(target = SendCommands, args = (3, connection)).start()
-    elif data == b'\x00\x00\x00\x02':
-      working_file_request = {'namelen':0, 'working_filename':'', 'padding':0}
-      data = connection.recv(4)
-      working_file_request['namelen'] = unpack('>L', data)[0]
-      data = connection.recv(working_file_request['namelen'])
-      working_file_request['working_filename'] = data.decode('ascii')
-      data = connection.recv(4)
-      working_file_request['padding'] = unpack('>L', data)[0]
+      print(">> %s sent Version Information (%s)" % (self.address, version_info))
+      Thread(target = self.commands, args = (3, )).start()
+    elif self.data == b'\x00\x00\x00\x02':
+      file_request = {'namelen':0, 'working_filename':'', 'padding':0}
+      self.data = self.connection.recv(4)
+      file_request['namelen'] = unpack('>L', self.data)[0]
+      self.data = self.connection.recv(file_request['namelen'])
+      file_request['working_filename'] = self.data.decode('ascii')
+      self.data = self.connection.recv(4)
+      file_request['padding'] = unpack('>L', self.data)[0]
       # Always Null Assuming Unused
-      print("%s Sent: File Request: %s" % (host, working_file_request))
-      Thread(target = SendCommands, args = (4, connection, working_file_request['working_filename'])).start()
-    elif data == b'\x00\x00\x00\x03':
-      Thread(target = SendCommands, args = (5, connection)).start()      
+      print(">> %s sent a Request for File %s (%s)" % (self.address, file_request['working_filename'], file_request))
+      # I think padding is used for resuming a file from the last fragment that downloaded.
+      Thread(target = self.commands, args = (4, file_request['working_filename'])).start()
+    elif self.data == b'\x00\x00\x00\x03':
+      Thread(target = self.commands, args = (5, )).start()
     else:
-      print("%s Sent Unhandeled Packets: %s" % (host, data))
+      print(">> %s sent unhandled message %s" % (self.address, self.data)) 
 
-def SendCommands(command, connection, target = None):
-  if command == 0:
-    # TODO: Impliment Patch Server Transfer
-    # BYTE 0x01
-    # BYTE[7] (all bytes 0x00)
-    # BYTE[4] IP Address
-    # BYTE[4] Port
-    print("PATCH SERVER TRANSFER NOT FUNCTIONAL")
-  if command == 1:
-    # TODO: Impliment Notifications
-    # BYTE 0x01
-    # BYTE[3] (all bytes 0x00)
-    # BYTE 0x01
-    # BYTE[3] (all bytes 0x00)
-    # BYTE 0x02
-    # BYTE[3] (all bytes 0x00)
-    # BYTE[4] Text Length
-    # BYTE[textlength] Notice Data (NULL Terminated)
-    print("NOTIFICATIONS NOT FUNCTIONAL")
-  if command == 2:
-    print("Server Sending: Protocol, Command, and UseSelf")
-    for i in range(0,3):
-      connection.send(b'\x00\x00\x00\x01')
-  if command == 3:
-    for working_file in _FILE_LIST:
-      working_file_listing = {'working_filename':working_file.encode('ascii'),
-                   'namelen':pack('>i', len(working_file.encode('ascii'))),
-                   'working_filelen':pack('>i', path.getsize(path.join(_PATCH_DIR, working_file)))}
-      print("Sever Sending File List Entry: %s" % working_file_listing)
-      connection.send(working_file_listing['namelen'])
-      connection.send(working_file_listing['working_filename'])
-      connection.send(working_file_listing['working_filelen'])
-    connection.send(b'\x00\x00\x00\x00')
-  if command == 4:
-    working_file_properties = {'working_filename':target,
-                       'namelen':pack('>i', len(target.encode('ascii'))),
-                       'working_filelen':path.getsize(path.join(_PATCH_DIR, target))}
-    print("Sever Sending File: %s" % working_file_properties)
-    connection.send(working_file_properties['namelen'])
-    connection.send(working_file_properties['working_filename'].encode('ascii'))
-    connection.send(pack('>i', working_file_properties['working_filelen']))
-    with open(path.join(_PATCH_DIR, working_file_properties['working_filename']), 'rb') as working_file:
-      block = working_file.read(1024)
-      while block:
-        connection.send(pack('>i', len(block)))
-        connection.send(block)
-        block = working_file.read(1024)
-    print(r"Sever Sending File End: \x00 Block Size")
-    connection.send(pack('>i', 0))
-  if command == 5:
-    connection.send(b'\x00\x00\x00\x00')
-    # TODO: Handle Error when Client Disconnects.
+  def run(self):
+    while self.listen:
+      self.requesthandler()
 
-opensocket = socket(AF_INET, SOCK_STREAM)
-opensocket.bind((_HOST, _PORT))
-print("%s listening on %i" % (_HOST, _PORT))
-opensocket.listen(1)
-print("Socket: Waiting on Connections.")
-while _RUNNING:
-  connection, address = opensocket.accept()
-  _CLIENTS[address[0]] = Thread(target = PatchListener, args = (connection, address[0]))
-  _CLIENTS[address[0]].start()
-print("MAIN _RUNNING == False")
+
+if __name__ == "__main__":
+  #_FILE_LIST = []
+  _PATCH_DIR = path.join('.', 'archive')
+  _PATCH_DIR = path.join('/home', 'simonomega', 'archive')
+  #print("Using Patch Directory: ", _PATCH_DIR)
+  #for working_file in listdir(_PATCH_DIR):
+  #  if working_file.endswith(".rtp"):
+  #    _FILE_LIST.append(working_file)
+  #  if working_file.endswith(".pat"):
+  #    _FILE_LIST.append(working_file)
+  #print("Using File List: %s" % _FILE_LIST)
+  _HOST = '127.0.0.1'
+  _PORT = 8888
+  _RUNNING = True
+  _CLIENTS = {}
+  _THREADS = []
+  
+  opensocket = socket(AF_INET, SOCK_STREAM)
+  opensocket.bind((_HOST, _PORT))
+  print("%s listening on %i" % (_HOST, _PORT))
+  opensocket.listen(1)
+  while _RUNNING:
+    print("Socket: Waiting on Connections.")
+    connection, ip_port = opensocket.accept()
+    _CLIENTS[ip_port[0]] = PatchHandler(connection, ip_port[0], _PATCH_DIR)
+  #  _CLIENTS[ip_port[0]] = Thread(target = PatchListener, args = (connection, address[0]))
+    _THREADS.append(Thread(target = _CLIENTS[ip_port[0]].run).start())
+  #  _CLIENTS[ip_port[0]].start()
+  print("MAIN _RUNNING == False")
