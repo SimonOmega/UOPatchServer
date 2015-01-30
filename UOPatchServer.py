@@ -129,16 +129,7 @@ class PatchHandler:
 
 
 if __name__ == "__main__":
-  #_FILE_LIST = []
   _PATCH_DIR = path.join('.', 'archive')
-  _PATCH_DIR = path.join('/home', 'simonomega', 'archive')
-  #print("Using Patch Directory: ", _PATCH_DIR)
-  #for working_file in listdir(_PATCH_DIR):
-  #  if working_file.endswith(".rtp"):
-  #    _FILE_LIST.append(working_file)
-  #  if working_file.endswith(".pat"):
-  #    _FILE_LIST.append(working_file)
-  #print("Using File List: %s" % _FILE_LIST)
   _HOST = '127.0.0.1'
   _PORT = 8888
   _RUNNING = True
