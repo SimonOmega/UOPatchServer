@@ -55,6 +55,7 @@ class PatchHandler:
       for i in range(0,3):
         self.connection.send(b'\x00\x00\x00\x01')
     if command == 3:
+      # TODO: I think the Client Expects just one pat and one rtp file.  Not all of them.
       for a_file in self.file_list:
         file_listing = {'working_filename':a_file.encode('ascii'),
                      'namelen':pack('>i', len(a_file.encode('ascii'))),
@@ -81,7 +82,7 @@ class PatchHandler:
             self.connection.send(pack('>i', len(block)))
             self.connection.send(block)
             block = push_file.read(1024)
-        print(r"]nSERVER << done sending %s PatchData for %s sending \x00\x00\x00\x00 Block Size\n" % (self.address, file_properties))
+        print(r"SERVER << done sending %s PatchData for %s sending \x00\x00\x00\x00 Block Size" % (self.address, file_properties))
         self.connection.send(pack('>i', 0))
     if command == 5:
       self.connection.send(b'\x00\x00\x00\x00')
@@ -104,6 +105,7 @@ class PatchHandler:
       version_info['version'] = unpack('>L', self.data)[0]
       # Version Number (Patch Number) in this addon
       print("\nCLIENT >> %s sent Version Information (%s)\n" % (self.address, version_info))
+      # TODO: Only send a new list if the version has changed.
       Thread(target = self.commands, args = (3, )).start()
     elif self.data == b'\x00\x00\x00\x02':
       file_request = {'namelen':0, 'working_filename':'', 'padding':0}
