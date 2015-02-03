@@ -38,7 +38,7 @@ class PatchHandler:
       # BYTE[7] (all bytes 0x00)
       # BYTE[4] IP Address
       # BYTE[4] Port
-      print("Patch Server does not support PatchServerTrasfer at this time.")
+      print("\nPatch Server does not support PatchServerTrasfer at this time.\n")
     if command == 1:
       # TODO: Impliment Notifications
       # BYTE 0x01
@@ -49,9 +49,9 @@ class PatchHandler:
       # BYTE[3] (all bytes 0x00)
       # BYTE[4] Text Length
       # BYTE[textlength] Notice Data (NULL Terminated)
-      print("Patch Server does not support Notifications at this time.")
+      print("\nPatch Server does not support Notifications at this time.\n")
     if command == 2:
-      print("Server Sending: Protocol, Command, and UseSelf")
+      print("\nServer Sending: Protocol, Command, and UseSelf\n")
       for i in range(0,3):
         self.connection.send(b'\x00\x00\x00\x01')
     if command == 3:
@@ -59,19 +59,19 @@ class PatchHandler:
         file_listing = {'working_filename':a_file.encode('ascii'),
                      'namelen':pack('>i', len(a_file.encode('ascii'))),
                      'working_filelen':pack('>i', path.getsize(path.join(self.working_directory, a_file)))}
-        print("<< Sever sent %s PatchListData entry %s" % (self.address, file_listing))
+        print("\nSERVER << sent %s PatchListData entry %s\n" % (self.address, file_listing))
         self.connection.send(file_listing['namelen'])
         self.connection.send(file_listing['working_filename'])
         self.connection.send(file_listing['working_filelen'])
         self.connection.send(b'\x00\x00\x00\x00')
     if command == 4:
       if target_file == None:
-        print("Trying to send PatchData to Client, but no target_file name was sent to command 4.")
+        print("\nTrying to send PatchData to Client, but no target_file name was sent to command 4.\n")
       else:
         file_properties = {'working_filename':target_file,
                            'namelen':pack('>i', len(target_file.encode('ascii'))),
                            'working_filelen':path.getsize(path.join(self.working_directory, target_file))}
-        print("<< Sever sending %s PatchData for %s" % (self.address, file_properties))
+        print("\nSERVER << sending %s PatchData for %s\n" % (self.address, file_properties))
         self.connection.send(file_properties['namelen'])
         self.connection.send(file_properties['working_filename'].encode('ascii'))
         self.connection.send(pack('>i', file_properties['working_filelen']))
@@ -81,18 +81,16 @@ class PatchHandler:
             self.connection.send(pack('>i', len(block)))
             self.connection.send(block)
             block = push_file.read(1024)
-        print(r"<< Sever done sending %s PatchData for %s sending \x00\x00\x00\x00 Block Size" % (self.address, file_properties))
+        print(r"]nSERVER << done sending %s PatchData for %s sending \x00\x00\x00\x00 Block Size\n" % (self.address, file_properties))
         self.connection.send(pack('>i', 0))
     if command == 5:
       self.connection.send(b'\x00\x00\x00\x00')
-      # TODO: Handle Error when Client Disconnects.
-      # Is socket left open and we are reading a Null Stream?
-      self.finish()
+      
 
   def requesthandler(self):
     self.data = self.connection.recv(self.buffer_len)
     if self.data == b'\x00\x00\x00\x15':
-      print(">> %s sent Client Hello/Request (%s)" % (self.address, self.data))
+      print("\nCLIENT >> %s sent Client Hello/Request (%s)\n" % (self.address, self.data))
       Thread(target = self.commands, args = (2, )).start()
     elif self.data == b'\x00\x00\x00\x01':
       version_info = {'namelen':0, 'addon':"", 'version':0}
@@ -105,7 +103,7 @@ class PatchHandler:
       self.data = self.connection.recv(4)
       version_info['version'] = unpack('>L', self.data)[0]
       # Version Number (Patch Number) in this addon
-      print(">> %s sent Version Information (%s)" % (self.address, version_info))
+      print("\nCLIENT >> %s sent Version Information (%s)\n" % (self.address, version_info))
       Thread(target = self.commands, args = (3, )).start()
     elif self.data == b'\x00\x00\x00\x02':
       file_request = {'namelen':0, 'working_filename':'', 'padding':0}
@@ -116,13 +114,16 @@ class PatchHandler:
       self.data = self.connection.recv(4)
       file_request['padding'] = unpack('>L', self.data)[0]
       # Always Null Assuming Unused
-      print(">> %s sent a Request for File %s (%s)" % (self.address, file_request['working_filename'], file_request))
+      print("\nCLIENT >> %s sent a Request for File %s (%s)\n" % (self.address, file_request['working_filename'], file_request))
       # I think padding is used for resuming a file from the last fragment that downloaded.
       Thread(target = self.commands, args = (4, file_request['working_filename'])).start()
     elif self.data == b'\x00\x00\x00\x03':
       Thread(target = self.commands, args = (5, )).start()
     else:
-      print(">> %s sent unhandled message %s" % (self.address, self.data)) 
+      print("\nCLIENT >> %s sent unhandled message %s\n" % (self.address, self.data)) 
+      # TODO: Handle Error when Client Disconnects.
+      # Is socket left open and we are reading a Null Stream?
+      self.finish()
 
   def run(self):
     while self.listen:
