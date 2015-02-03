@@ -1,4 +1,4 @@
-h'''
+'''
 Created on Jul 07, 2013
 
 @author: simonomega
@@ -86,7 +86,8 @@ class PatchHandler:
     if command == 5:
       self.connection.send(b'\x00\x00\x00\x00')
       # TODO: Handle Error when Client Disconnects.
-
+      # Is socket left open and we are reading a Null Stream?
+      self.finish()
 
   def requesthandler(self):
     self.data = self.connection.recv(self.buffer_len)
