@@ -1,4 +1,4 @@
-'''
+h'''
 Created on Jul 07, 2013
 
 @author: simonomega
@@ -65,7 +65,7 @@ class PatchHandler:
         self.connection.send(file_listing['working_filelen'])
         self.connection.send(b'\x00\x00\x00\x00')
     if command == 4:
-      if file == None:
+      if target_file == None:
         print("Trying to send PatchData to Client, but no target_file name was sent to command 4.")
       else:
         file_properties = {'working_filename':target_file,
