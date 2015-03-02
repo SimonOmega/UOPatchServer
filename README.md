@@ -1,7 +1,5 @@
 ### 2nd March 2015 - 
 This Code Should Be a Functional Beta Test
--------------------------------
-
 
 License
 -------------------------------
