@@ -1,4 +1,5 @@
-2nd March 2015 - This Code Should Be a Functional Beta Test
+### 2nd March 2015 - 
+This Code Should Be a Functional Beta Test
 -------------------------------
 
 
@@ -19,8 +20,6 @@ Introduction
 ### THIS IS A QUICK HACK.  
 
 That being said this code is proof of concept and will be growing as there is time to work on it.  This was built as an example of a possible server solution and not just a wrapper to the UOPatch.exe application (localy).
-
-### 01 Feb 2015 - I am working on making it an actual solution.
 
 Quickstart Guide
 ----------------
