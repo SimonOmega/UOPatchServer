@@ -46,7 +46,7 @@ The patcher will attach to the Python script and begin to transfer the patch fil
 Tests
 ----------------
 
-- Python Version: 3.2.2, 4.3.1
+- Python Version: 3.2.2, 3.4.2
 - Windows Version: Windows 7 Home Premium (64bit & 32bit), Windows 8 Pro (64bit & 32bit)
 - Linux Version: CrunchBang 11 Waldorf (64bit), Fedora 21 (64bit)
 - UO Client: 7.0.10.3, 7.0.11, 7.0.12, 7.21.1
