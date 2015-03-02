@@ -55,14 +55,9 @@ Tests
 Issues
 ----------------
 
-- [ ] Send Customized Patch List
-As of 01 Feb 2015, I am looking into the following issue as the first thing to resolve.
-At this time `UOPatchServer.py` does not do any real verification on the clients current version, and the patches it has available.  What ever is in the `archive` folder will be applied.
-- [ ] 3 Notifications from server to the patch client are not implemented.
+- [ ] Notifications from server to the patch client are not implemented.
 - [ ] Can we continue an interupted download using the padding reported by a client's request for data?
 - [ ] Increase the send block size. Files are sent 1KB at a time which is slow even for local traffic.
-- [ ] Script may error when client disconnects. I think this is really just an OK from client waiting on an OK from server.  Tried a work around.
-
 
 Credits
 ------------
