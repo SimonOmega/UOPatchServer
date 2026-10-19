@@ -1,0 +1,59 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+    "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="en">
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <title>Shard News</title>
+    <style type="text/css">
+        body { background-color: #f3ecd8; color: #292018;
+               font-family: Georgia, "Times New Roman", serif;
+               font-size: 14px; margin: 12px; }
+        #page {
+          width: 650px;
+          margin: 0 auto;
+        }
+        h1 { font-size: 22px; margin: 0 0 6px 0; }
+        h2 { font-size: 17px; margin: 0 0 6px 0; color: #643a23; }
+        p { margin: 6px 0; line-height: 1.4; }
+        a { color: #743b22; }
+        .masthead { background-color: #392b21; color: #fff5db; padding: 12px; }
+        .article { background-color: #fffaf0; border: 1px solid #b6a281;
+                   padding: 12px; }
+        .date { font-size: 12px; color: #6f604a; }
+    </style>
+</head>
+<body>
+    <div id="page">
+        <table width="100%" border="0" cellspacing="0" cellpadding="0"
+               summary="Shard announcements">
+            <tr>
+                <td class="masthead">
+                    <h1>Shard News</h1>
+                    <p>Announcements, patch notes and events</p>
+                </td>
+            </tr>
+            <tr>
+                <td class="article">
+                    <h2>Welcome to the shard</h2>
+                    <p class="date">14 October 2026</p>
+                    <p>The patcher will download the available updates while
+                       you read the latest news.</p>
+                    <p>Replace this sample with your own announcements.</p>
+                    <!-- Add images inside news, for example images/banner.jpg.
+                         Use an img element with src, alt, width and height. -->
+                </td>
+            </tr>
+            <tr>
+                <td class="article">
+                    <h2>Patch notes</h2>
+                    <ul>
+                        <li>Describe your latest changes here.</li>
+                        <li>Add the dates of your next events.</li>
+                    </ul>
+                    <p>Please leave the patcher open until it finishes.</p>
+                </td>
+            </tr>
+        </table>
+    </div>
+</body>
+</html>
